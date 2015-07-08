@@ -1,0 +1,244 @@
+include ${SUBDIR:%=%/Makefile}
+
+$(info $(argument))
+
+#
+# tsan=enable
+# 
+ifdef tsan
+    ifeq ($(tsan), enable)
+	BUILD_CCFLAGS += -fsanitize=thread -fPIE
+	LDFLAGS += -ltsan -pie
+    else
+	$(error unkown tsan option)
+    endif
+
+    $(info ** tsan enabled)
+endif
+
+#
+# asan=enable
+# 
+ifdef asan
+    ifeq ($(asan), enable)
+	BUILD_CCFLAGS += -fsanitize=address -fno-omit-frame-pointer
+	LDFLAGS += -fsanitize=address -lasan
+    else
+	$(error unknown option for asan)
+    endif
+
+    $(info ** asan enabled)
+endif
+
+
+#
+# LCOV=enable
+#
+ifdef LCOV
+    ifeq ($(LCOV), enable)
+        BUILD_CCFLAGS += -g -fprofile-arcs -ftest-coverage
+        LDFLAGS += -fprofile-arcs
+    else
+	$(error Unknown lcov option)
+    endif
+
+    $(info ** lcov enabled)
+endif
+
+#
+# OPT=enable
+#
+ifdef OPT
+    ifeq ($(OPT), enable)
+        # optimized build
+        BUILD_CCFLAGS += -O2 -g
+    else
+        $(error Unknown value for OPT)
+    endif
+
+    $(info ** opt enabled)
+else
+    BUILD_CCFLAGS += -DDEBUG_BUILD
+    $(info ** opt disabled)
+endif
+
+#
+# DEBUG=disable
+#
+ifdef DEBUG
+    # Disable debug
+    ifeq ($(DEBUG), disable)
+        BUILD_CCFLAGS +=
+    else
+        $(error Unknown value for DEBUG)
+    endif
+
+    $(info ** debug disabled)
+else
+    BUILD_CCFLAGS += -g3
+
+    $(info ** debug enabled)
+endif
+
+#
+# PROFILE=enable
+#
+ifdef PROFILE
+    ifeq ($(PROFILE), enable)
+        # optimized build
+        BUILD_CCFLAGS += -pg
+        LDFLAGS += -pg
+    else
+        $(error Unknown value for PROFILE)
+    endif
+
+    $(info ** profile enabled)
+endif
+
+#
+# VERBOSE=disable
+#
+ifdef VERBOSE
+    ifeq ($(VERBOSE), disable)
+        $(info ** VERBOSE disabled **)
+        BUILD_CCFLAGS += -DDISABLE_VERBOSE
+    else
+        $(error Unknown value for VERBOSE)
+    endif
+
+    $(info ** verbose enabled)
+endif
+
+#
+# VALGRIND=enable
+#
+ifdef VALGRIND
+    ifeq ($(VALGRIND), enable)
+        CCFLAGS += -DVALGRIND_BUILD
+    else
+        $(error Unknown value for VALGRIND)
+    endif
+
+    $(info ** valgrind enabled)
+endif
+
+#
+# ERRCHECK=enable
+#
+ifdef ERRCHK
+    ifeq ($(ERRCHK), enable)
+        CCFLAGS += -DERROR_CHECK
+    else
+        $(error Unknown value for ERRCHK)
+    endif
+
+    $(info ** errcheck enabled)
+endif
+
+#
+# TCMALLOC
+#
+ifdef TCMALLOC
+    ifeq ($(TCMALLOC), enable)
+        LIBS += -ltcmalloc_minimal
+    else
+	$(error unknown tcmalloc option)
+    endif
+
+    $(info tcmalloc enabled)
+endif
+
+#
+# CC
+#
+ifndef $(CC)
+    CC = g++
+endif
+
+#
+# static binaries
+#
+ifdef STATICLIB
+        ifeq ($(STATICLIB), enable)
+                LDFLAGS += -static -static-libgcc -static-libstdc++
+        else
+                $(error unknown staticlib value)
+        endif
+
+        $(info ** staticlib enabled)
+endif
+
+$(info ** Using compiler $(CC))
+
+CY = $(shell which cython)
+AR = $(shell which ar)
+CP = $(shell which cp)
+MKDIR_P = mkdir -p
+MV = mv
+RM = rm
+
+PYINCLUDE := -I/usr/include/python2.7/
+
+CCFLAGS += -fPIC -Wall -std=c++11 -Werror -D__STDC_LIMIT_MACROS $(BUILD_CCFLAGS)
+LDFLAGS += -L$(OBJDIR)  -L/usr/lib
+INCLUDE += -I. -I./src -I./include $(PYINCLUDE) 
+LIBS    += -lrt -lpthread  -lz -lboost_program_options -lboost_regex
+
+ifndef OBJDIR
+OBJDIR	:= $(PWD)/../build
+endif
+
+OBJS    := ${SRCS:%.cc=$(OBJDIR)/%.o}
+DEPS    := ${OBJS:%.o=%.dep}
+TOBJS	:= ${TARGET:%.cc=$(OBJDIR)/%.o}
+TDEPS	:= ${TOBJS:%.o=%.dep}
+TEXE	:= ${TARGET:%.cc=$(OBJDIR)/%}
+STATIC	:= ${LIBRARY:%=${OBJDIR}/%/library.a}
+PYX	:= ${PYX:%.pyx=$(OBJDIR)/%.pyx}
+DYNAMIC := ${SHARED:%.so=$(OBJDIR)/%.so}
+
+-include $(DEPS)
+-include $(TDEPS)
+
+all: ${OBJS} ${PYX} ${STATIC} ${SHARED} ${TOBJ} ${TEXE}
+	@rm -r -f $(OBJDIR)/lib $(OBJDIR)/bin
+	@${MKDIR_P} $(OBJDIR)/lib $(OBJDIR)/bin
+	@echo ' CP	.so => $(OBJDIR)/lib'
+	@${CP} -f `find $(OBJDIR) | egrep "\.so$$"` $(OBJDIR)/lib
+	@echo ' CP	binaries => $(OBJDIR)/bin'
+	@${CP} -f ${TEXE} $(OBJDIR)/bin
+
+${TEXE}: ${STATIC} ${TOBJS} ${DYNAMIC}
+	@echo ' LD	' $@ $(ARDIR)
+ifdef ARDIR
+	@${CC} ${LDFLAGS} $@.o ${STATIC} `find $(ARDIR)/*.a` -o $@ ${LIBS}
+else
+	@${CC} ${LDFLAGS} $@.o ${STATIC} -o $@ ${LIBS} 
+endif
+
+${STATIC}: ${OBJS}
+	@echo ' AR	' $@
+	@$(AR) rcs $@ $(shell find $(dir $@) | egrep "\.o$$") 
+ifdef ARDIR
+	@echo ' CP	$(OBJDIR)/$@/library.a => $(ARDIR)/$(notdir $@.a)'
+	@cp $(OBJDIR)/$@/library.a $(ARDIR)/$(notdir $@).a
+endif
+
+${SHARED}: ${OBJ} ${PYX}
+	@echo ' SO	' ${OBJDIR}/$@
+	@${MKDIR_P} $(dir $(OBJDIR)/$@)
+	@${CC} -shared -o ${OBJDIR}/$@ `find $(dir $(OBJDIR)/$@) | egrep "\.o$$"`
+
+$(OBJDIR)/%.pyx: %.pyx
+	@echo ' PYX	' $@
+	@${MKDIR_P} $(dir $@)
+	@${CY} $< -o $(OBJDIR)/$*.cc --cplus
+	@${CC} -w -fPIC -shared ${INCLUDE} ${CCFLAGS} -o $(OBJDIR)/$*.o -c $(OBJDIR)/$*.cc
+	@${CC} -shared -o $(OBJDIR)/$*.so $(OBJDIR)/$*.o `find $(OBJDIR) | egrep "\.a$$"`
+
+$(OBJDIR)/%.o: %.cc
+	@echo ' CC	' $@
+	@${MKDIR_P} $(dir $@)
+	@${CC} ${INCLUDE} ${CCFLAGS} -o $@ -c $< 
+	@${CC} ${INCLUDE} ${CCFLAGS} -MT '$@' -MM $< > ${OBJDIR}/$*.dep
+
