@@ -110,5 +110,3 @@ tags:
 	$(shell cd ..; rm -f tags; ctags -R .)
 
 .DEFAULT_GOAL := default
-
-include MakefileRules
