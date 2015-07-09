@@ -2,10 +2,6 @@ ifndef OBJDIR
 OBJDIR = $(PWD)/obj
 endif
 
-SUBDIR = src/			\
-	 src/kmod	 	\
-	 test			\
-
 clean: build-teardown
 
 
