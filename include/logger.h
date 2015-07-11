@@ -1,5 +1,4 @@
-#ifndef _KCOMMON_LOGGER_H_
-#define _KCOMMON_LOGGER_H_
+#pragma once
 
 #include <fstream>
 #include <vector>
@@ -230,5 +229,3 @@ public:
 };
 
 };
-
-#endif
