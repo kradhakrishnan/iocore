@@ -1,3 +1,3 @@
-# Makefile
+# cc-core
 
-Generalized build and test infrastructure for my projects. The objective is to provide a simple infrastructure for building, unit/performance/fuzz testing, performace profiling of my projects in the most effecient and parallel way possible.  
+cc-core provides the basic C++ components required to build a robust professional C++ application. This is designed to be included as a submodule in other repositories.
