@@ -29,15 +29,24 @@ Thread::Destroy()
 void *
 Thread::ThFn(void * args)
 {
+
 	INVARIANT(args);
 
 	Thread * th = (Thread *) args;
 
+	th->DisableThreadCancellation();
+
 	ThreadCtx::Init(th);
+
+	th->EnableThreadCancellation();
 
 	void * thstatus = th->ThreadMain();
 
+	th->DisableThreadCancellation();
+
 	ThreadCtx::Cleanup();
+
+	th->EnableThreadCancellation();
 
 	return thstatus;
 }

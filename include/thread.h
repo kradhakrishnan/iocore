@@ -28,15 +28,7 @@ public:
 
 	virtual ~Thread();
 
-	void StartBlockingThread()
-	{
-		int ok = pthread_create(&tid_, /*attr=*/ NULL, ThFn, (void *)this);
-		INVARIANT(!ok);
-
-		INFO(log_) << "Thread " << tid_ << " created. (instance " << (long) this << ")";
-	}
-
-	void StartNonBlockingThread()
+	void Start()
 	{
 		int ok = pthread_create(&tid_, /*attr=*/ NULL, ThFn, (void *)this);
 		INVARIANT(!ok);
@@ -58,10 +50,10 @@ public:
 		ASSERT(!status);
 	}
 
-	void Cancel()
+	bool Cancel()
 	{
 		int status = pthread_cancel(tid_);
-		INVARIANT(!status);
+		return !status;
 	}
 
 	void Detach()
@@ -70,7 +62,7 @@ public:
 		INVARIANT(!status);
 	}
 
-	virtual void Stop()
+	virtual void Join()
 	{
 		void * ret;
 		int status = pthread_join(tid_, &ret);
