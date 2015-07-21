@@ -3,6 +3,19 @@ enable_testing()
 find_package(Threads REQUIRED)
 find_package(Boost 1.40 COMPONENTS program_options REQUIRED)
 
+set (CC_FLAGS "-Wall -std=c++11 -Werror")
+
+message ("DEBUG="	$ENV{DEBUG})
+message ("OPT="		$ENV{OPT})
+
+if ($ENV{DEBUG} MATCHES "1")
+	set (CC_FLAGS "${CC_FLAGS} -g")
+endif()
+
+if ($ENV{OPT} MATCHES "1")
+	set (CC_FLAGS "${CC_FLAGS} -O2")
+endif()
+
 set (CMAKE_VERBOSE_MAKEFILE ON)
 
-set (CMAKE_CXX_FLAGS "-g -Wall -std=c++11 -Werror")
+set (CMAKE_CXX_FLAGS "${CC_FLAGS}")
