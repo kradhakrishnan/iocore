@@ -1,3 +1,5 @@
 # iocore
 
-iocore provides the basic C++ components required to build a robust professional IO bound C++ application. This library provides robust abstractions to build systems using the fastest SSDs and networking gears. This is designed to be included as a submodule in other repositories.
+iocore provides the basic abstractions required to build a professional C++ systems application. It also provides a build framework using CMake, a test framework using gtest and basic IO abstractions like TCP, AIO.
+
+This livrary is designed to abstract the fundamental components of a typical systems application from the scheduler and applicaiton logic.
