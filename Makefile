@@ -17,11 +17,11 @@ all:
 		cmake .. \
 	&& make -j$J
 
-test:
+test: all
 	@echo 'TEST'
 	@cd $(OBJDIR) && ctest -j$J
 
-build-and-test: clean all test
+build-and-test: clean test
 
 clean:
 	@echo 'CLEAN'
