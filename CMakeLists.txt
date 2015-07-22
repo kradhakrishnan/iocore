@@ -14,4 +14,4 @@ add_executable (thread-test test/thread-test.cc)
 
 target_link_libraries(thread-test gtest core pthread boost_regex)
 
-add_test(${CMAKE_SOURCE_DIR}/scripts/run-test-case.sh ${CMAKE_BINARY_DIR}/thread-test)
+add_test(${RUN_TEST_CASE} ${CMAKE_BINARY_DIR}/thread-test)

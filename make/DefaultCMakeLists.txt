@@ -19,3 +19,5 @@ endif()
 set (CMAKE_VERBOSE_MAKEFILE ON)
 
 set (CMAKE_CXX_FLAGS "${CC_FLAGS}")
+
+set (RUN_TEST_CASE "${CMAKE_SOURCE_DIR}/scripts/run-test-case.sh")
