@@ -1,0 +1,28 @@
+ifndef OBJDIR
+OBJDIR=$(PWD)/obj
+endif
+
+ifndef J
+J=`nproc`
+endif
+
+base-all:
+	@echo 'MAKE'
+	@mkdir -p $(OBJDIR)
+	@cd $(OBJDIR) && \
+		OBJDIR=${OBJDIR} \
+		J=${J} \
+		DEBUG=${DEBUG} \
+		OPT=${OPT}  \
+		cmake .. \
+	&& make -j$J
+
+base-test: all
+	@echo 'TEST'
+	@cd $(OBJDIR) && ctest -j$J
+
+base-clean:
+	@echo 'CLEAN'
+	@rm -r -f $(OBJDIR)
+
+build-and-test: clean test

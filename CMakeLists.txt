@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 2.8 FATAL_ERROR)
 
-include (make/DefaultCMakeLists.txt)
+include (cmake/DefaultCMakeLists.txt)
 
 include_directories (${CMAKE_SOURCE_DIR}/include
 					 ${CMAKE_SOURCE_DIR}/third-party/gtest-1.7.0

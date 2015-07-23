@@ -1,28 +1,6 @@
-ifndef OBJDIR
-OBJDIR=$(PWD)/obj
-endif
+include cmake/DefaultMakefile
 
-ifndef J
-J=`nproc`
-endif
+all: base-all
 
-all:
-	@echo 'MAKE'
-	@mkdir -p $(OBJDIR)
-	@cd $(OBJDIR) && \
-		OBJDIR=${OBJDIR} \
-		J=${J} \
-		DEBUG=${DEBUG} \
-		OPT=${OPT}  \
-		cmake .. \
-	&& make -j$J
+clean: base-clean
 
-test: all
-	@echo 'TEST'
-	@cd $(OBJDIR) && ctest -j$J
-
-build-and-test: clean test
-
-clean:
-	@echo 'CLEAN'
-	@rm -r -f $(OBJDIR)
